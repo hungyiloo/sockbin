@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.css">
-        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.css" />
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/theme/monokai.min.css" />
         <script src="//code.jquery.com/jquery-2.1.1-beta1.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/htmlmixed/htmlmixed.min.js"></script>
@@ -13,6 +14,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/css/css.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/python/python.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+
         <meta charset="utf-8">
         <title>SockBin</title>
 
@@ -21,20 +23,21 @@
                 margin: 0;
                 padding: 0;
                 font-family: Arial, sans-serif;
+                background: #272822;
             }
             #headerbar {
                 padding: 10px;
-                background: #F7F7F7;
+                background: #2d2e28;
                 height: 42px;
             }
             #headerbar > * {
                 float: right;
-                margin-left: 1em;
+                margin-left: 0.75em;
             }
             #headerbar h1 {
                 color: #993344;
                 padding: 0;
-                margin: 0;
+                margin: 0 0.3em;
                 font-family: "Segoe UI";
                 line-height: 22px;
                 float:left;
@@ -42,23 +45,34 @@
                 font-weight: bold;
             }
             #headerbar h1 .dark {
-                color: #444;
+                color: #888;
             }
             #headerbar h1 .light {
-                color: #aaa;
+                color: #666;
             }
             #headerbar h1 .faded {
-                color: #ccc;
+                color: #555;
             }
             .CodeMirror {
                 clear:both;
-                border: 1px solid #eee;
                 height: auto;
                 font-family: Consolas, monospace;
+                border-top: 1px solid #eee;
+                border-bottom: 1px solid #eee;
             }
-            .CodeMirror-scroll {
+            .CodeMirror.cm-s-monokai {
+                border-top: 1px solid #33352e;
+                border-bottom: 1px solid #33352e;
+            }
+            .cm-s-monokai .CodeMirror-scroll {
                 overflow-y: hidden;
                 overflow-x: auto;
+            }
+            .cm-s-monokai .CodeMirror-gutters {
+                background: #2d2e28 !important;
+            }
+            .CodeMirror-linenumber {
+                color: #666 !important;
             }
             #channel-name {
                 cursor: pointer;
@@ -67,22 +81,33 @@
                 position: relative;
                 top: 0.2em;
                 line-height: 1.2em;
+                border-radius: 2em;
+            }
+            #mode-container {
+                width: 140px;
+            }
+            #mode {
+                font-size: 0.75em;
+                padding: 0.2em 0.5em;
+                height: 23px;
             }
         </style>
     </head>
     <body>
         <div id="headerbar">
             <h1>SOCK<span class="dark">BIN</span><span class="faded">#</span><span id="channel-name" class="light"></span></h1>
-            <span id="user-count" class="label label-primary"></span>
-            <select id="mode">
-                <option value="htmlmixed">Mixed HTML/JS/CSS</option>
-                <option value="javascript">Javascript</option>
-                <option value="text/x-csharp">C#</option>
-                <option value="text/x-java">Java</option>
-                <option value="text/x-mariadb">SQL</option>
-                <option value="python">Python</option>
-                <option value="xml">XML</option>
-            </select>
+            <div id="mode-container">
+                <select id="mode" class="form-control">
+                    <option value="htmlmixed">Mixed HTML/JS/CSS</option>
+                    <option value="javascript">Javascript</option>
+                    <option value="text/x-csharp">C#</option>
+                    <option value="text/x-java">Java</option>
+                    <option value="text/x-mariadb">SQL</option>
+                    <option value="python">Python</option>
+                    <option value="xml">XML</option>
+                </select>
+            </div>
+            <span id="user-count" class="label label-default"></span>
         </div>
         <textarea id="miku"></textarea>
         <script>
@@ -154,8 +179,10 @@
                 indentUnit: 4,
                 tabSize: 4,
                 mode: "htmlmixed",
-                lineNumbers: true,
                 autofocus: true,
+                theme: "monokai",
+                lineNumbers: true,
+                lineWrapping: true
             });
 
             editor.on("change", function(){
