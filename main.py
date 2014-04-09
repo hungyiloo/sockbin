@@ -20,6 +20,8 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
         channels[self.channel]['listeners'].remove(self)
         if len(channels[self.channel]['listeners']) == 0:
             del channels[self.channel]
+        else:
+            self.send_all('setUserCount', len(channels[self.channel]['listeners']))
 
     def send_back(self, command, payload):
         self.write_message(json.dumps({
@@ -32,6 +34,10 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
             if listener != self:
                 listener.send_back(command, payload)
 
+    def send_all(self, command, payload):
+        for listener in channels[self.channel]['listeners']:
+            listener.send_back(command, payload)
+
     def on_message(self, data):
         def update(content):
             channels[self.channel]['content'] = content
@@ -39,6 +45,7 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
         def load():
             self.send_back('update', channels[self.channel]['content'])
             self.send_back('setMode', channels[self.channel]['mode'])
+            self.send_all('setUserCount', len(channels[self.channel]['listeners']))
         def set_mode(mode):
             channels[self.channel]['mode'] = mode
             self.send_out('setMode', mode)
