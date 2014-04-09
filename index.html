@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.css">
+        <script src="//code.jquery.com/jquery-git2.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/htmlmixed/htmlmixed.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/javascript/javascript.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/clike/clike.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/sql/sql.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/xml/xml.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/css/css.min.js"></script>
+        <meta charset="utf-8">
+        <title>SockBin</title>
+
+        <style id="jsbin-css">
+            html, body { 
+                margin: 0;
+                padding: 0;
+            }
+            #headerbar {
+                padding: 10px;
+                background: #F7F7F7;
+                height: 25px;
+            }
+            #headerbar > select {
+                float: right;
+            }
+            #headerbar h1 {
+                color: #993344;
+                padding: 0;
+                margin: 0;
+                font-family: "Segoe UI";
+                line-height: 22px;
+                float:left;
+                font-size: 1.5em;
+            }
+            #headerbar h1 .dark {
+                color: #444;
+            }
+            .CodeMirror {
+              border: 1px solid #eee;
+              height: auto;
+              font-family: Consolas, monospace;
+            }
+            .CodeMirror-scroll {
+              overflow-y: hidden;
+              overflow-x: auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="headerbar">
+            <h1>SOCK<span class="dark">BIN</span></h1>
+            <select id="mode">
+                <option value="htmlmixed">Mixed HTML/JS/CSS</option>
+                <option value="javascript">Javascript</option>
+                <option value="text/x-csharp">C#</option>
+                <option value="text/x-java">Java</option>
+                <option value="text/x-mariadb">SQL</option>
+            </select>
+        </div>
+        <textarea id="miku"></textarea>
+        <script>
+        $(function() {
+            var channel = document.location.search.substring(1, document.location.search.length);
+            if (!channel)
+                channel = "welcome"
+            var ws = new WebSocket("ws://sockbin.wintermornings.net:30000/" + channel);
+            var previousValue = null;
+            ws.onopen = function() {
+                ws.send("@@~~3939~~@@");
+            };
+            ws.onmessage = function(e) {
+                previousValue = e.data;
+                editor.setValue(e.data);
+            };
+
+            window.editor = CodeMirror.fromTextArea($("#miku")[0], {
+                mode: "text/html",
+                indentUnit: 4,
+                tabSize: 4,
+                mode: "htmlmixed",
+                lineNumbers: true,
+                autofocus: true,
+            });
+
+            editor.on("change", function(){
+                var newValue = editor.getValue();
+                if (newValue != previousValue) {
+                    ws.send(newValue);
+                    previousValue = newValue;
+                }
+            });
+
+            $("#mode").change(function() {
+                editor.setOption("mode", $(this).val());
+            })
+        });
+        </script>
+    </body>
+</html>
