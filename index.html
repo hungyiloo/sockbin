@@ -17,7 +17,6 @@
 
         <meta charset="utf-8">
         <title>SockBin</title>
-
         <style id="jsbin-css">
             html, body { 
                 margin: 0;
@@ -149,8 +148,13 @@
             // Server side calls (RPC)
             var remote = {
                 update: function(content) {
-                    previousContent = content;
-                    editor.setValue(content);
+                    if (previousContent == null && content == "") {
+                        editor.setValue(atob("PCFET0NUWVBFIGh0bWw+DQo8aHRtbD4NCiAgICA8aGVhZD4NCiAgICAgICAgPHRpdGxlPlNvY2tCaW48L3RpdGxlPg0KICAgIDwvaGVhZD4NCiAgICA8Ym9keT4NCiAgICAgICAgPGgxPkhpISBUaGlzIGlzIFNvY2tCaW4uPC9oMT4NCiAgICAgICAgDQogICAgICAgIDxwPlNvY2tCaW4gaXMgbWVhbnQgZm9yIHF1aWNrIGNvZGUgc2hhcmluZy48L3A+DQogICAgICAgIDxwPkNvcHkgdGhlIFVSTCBmcm9tIHRoZSBhZGRyZXNzIGJhciB0byBzaGFyZSB0aGlzIGNoYW5uZWwgd2l0aCBhbnkgbnVtYmVyIG9mIHBlb3BsZS48L3A+DQogICAgICAgIA0KICAgICAgICANCiAgICAgICAgPGgyPlBsZWFzZSBOb3RlITwvaDI+DQogICAgICAgIDxwPg0KICAgICAgICAgICAgRWRpdHMgYXJlIG1hZGUgaW4gcmVhbCB0aW1lIGJldHdlZW4gYWxsIHVzZXJzLCBzbyA8c3Ryb25nPkNPTkZMSUNUUyBXSUxMIE9DQ1VSPC9zdHJvbmc+IA0KICAgICAgICAgICAgaWYgbW9yZSB0aGFuIG9uZSBwZXJzb24gaXMgbWFraW5nIGNoYW5nZXMgYXQgdGhlIHNhbWUgdGltZS4NCiAgICAgICAgPC9wPg0KICAgICAgICA8cD4NCiAgICAgICAgICAgIFdoZW4gZXZlcnlvbmUgaGFzIGxlZnQgdGhlIGNoYW5uZWwsIHRoZSBjb2RlIHdpbGwgYmUgPHN0cm9uZz5ERUxFVEVEIEZPUkVWRVI8L3N0cm9uZz4uDQogICAgICAgICAgICBNYWtlIHN1cmUgdG8gPHN0cm9uZz5TQVZFIFlPVVIgV09SSzwvc3Ryb25nPiBiZWZvcmUgeW91IGdvLg0KICAgICAgICA8L3A+DQogICAgPC9ib2R5Pg0KPC9odG1sPg=="))
+                    }
+                    else {
+                        previousContent = content;
+                        editor.setValue(content);
+                    }
                 },
                 setMode: function(mode) {
                     editor.setOption("mode", mode);
