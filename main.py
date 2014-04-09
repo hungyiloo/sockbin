@@ -1,32 +1,56 @@
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+import json
 
-app = dict()
+channels = dict()
 
-class EchoWebSocket(tornado.websocket.WebSocketHandler):
+class SockBinWebSocket(tornado.websocket.WebSocketHandler):
     def open(self, channel):
-    	self.channel = channel
-    	if channel not in app:
-    		app[channel] = {
-    			'listeners': [],
-    			'data': ""
-    		}
-    	app[self.channel]['listeners'].append(self)
-    	self.write_message(app[self.channel]['data'])
-    def on_message(self, message):
-    	if message != "@@~~3939~~@@":
-        	app[self.channel]['data'] = message
-        for listener in app[self.channel]['listeners']:
-        	if listener != self or message == "@@~~3939~~@@":
-        		listener.write_message(app[self.channel]['data'])
+        self.channel = channel
+        if channel not in channels:
+            channels[channel] = {
+                'listeners': [],
+                'content': "",
+                'mode': "htmlmixed",
+            }
+        channels[self.channel]['listeners'].append(self)
+
     def on_close(self):
-        app[self.channel]['listeners'].remove(self)
-        if len(app[self.channel]['listeners']) == 0:
-        	del app[self.channel]
+        channels[self.channel]['listeners'].remove(self)
+        if len(channels[self.channel]['listeners']) == 0:
+            del channels[self.channel]
+
+    def send_back(self, command, payload):
+        self.write_message(json.dumps({
+            'command': command,
+            'payload': payload    
+        }))
+
+    def send_out(self, command, payload):
+        for listener in channels[self.channel]['listeners']:
+            if listener != self:
+                listener.send_back(command, payload)
+
+    def on_message(self, data):
+        def update(content):
+            channels[self.channel]['content'] = content
+            self.send_out('update', content)
+        def load():
+            self.send_back('update', channels[self.channel]['content'])
+            self.send_back('setMode', channels[self.channel]['mode'])
+        def set_mode(mode):
+            channels[self.channel]['mode'] = mode
+            self.send_out('setMode', mode)
+
+        data = json.loads(data)
+        if 'payload' in data:
+            locals()[data['command']](data['payload'])
+        else:
+            locals()[data['command']]()
 
 application = tornado.web.Application([
-    (r"/([0-9a-zA-Z]+)", EchoWebSocket),
+    (r"/([0-9a-zA-Z]+)", SockBinWebSocket),
 ])
 
 if __name__ == "__main__":

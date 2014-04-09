@@ -2,7 +2,7 @@
 <html>
     <head>
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.css">
-        <script src="//code.jquery.com/jquery-git2.js"></script>
+        <script src="//code.jquery.com/jquery-2.1.1-beta1.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/codemirror.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/htmlmixed/htmlmixed.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/javascript/javascript.min.js"></script>
@@ -73,23 +73,65 @@
         </div>
         <textarea id="miku"></textarea>
         <script>
+        var SockBin = function(initChannel) {
+            var me = this;
+            var ws = null;
+            var previousContent = null;
+
+            function sendMessage(command, payload) {
+                ws.send(JSON.stringify({command: command, payload: payload}));
+            }
+
+            // CLient side calls
+            me.openChannel = function(channel) {
+                if (ws) {
+                    ws.close()
+                }
+                ws = new WebSocket("ws://sockbin.wintermornings.net:30000/" + channel);
+                ws.onopen = function() {
+                    sendMessage("load")
+                };
+                ws.onmessage = function(e) {
+                    var data = JSON.parse(e.data);
+                    remote[data.command](data.payload);
+                };
+            };
+            me.update = function (newContent) {
+                if (newContent != previousContent) {
+                    sendMessage("update", newContent);
+                    previousContent = newContent
+                }
+            };
+            me.setMode = function (mode) {
+                sendMessage("set_mode", mode);
+            }
+
+            // Server side calls (RPC)
+            var remote = {
+                update: function(content) {
+                    previousContent = content;
+                    editor.setValue(content);
+                },
+                setMode: function(mode) {
+                    editor.setOption("mode", mode);
+                    $("#mode").val(mode);
+                }
+            }
+
+            if (initChannel) {
+                me.openChannel(initChannel);
+            }
+        };
+
         $(function() {
+
             var channel = document.location.hash.substring(1, document.location.hash.length);
             if (!channel) {
                 channel = "lobby"
                 document.location.hash = "#" + channel;
             }
+            var app = new SockBin(channel);
             $("#channel-name").text(channel);
-
-            var ws = new WebSocket("ws://sockbin.wintermornings.net:30000/" + channel);
-            var previousValue = null;
-            ws.onopen = function() {
-                ws.send("@@~~3939~~@@");
-            };
-            ws.onmessage = function(e) {
-                previousValue = e.data;
-                editor.setValue(e.data);
-            };
 
             window.editor = CodeMirror.fromTextArea($("#miku")[0], {
                 mode: "text/html",
@@ -101,28 +143,18 @@
             });
 
             editor.on("change", function(){
-                var newValue = editor.getValue();
-                if (newValue != previousValue) {
-                    ws.send(newValue);
-                    previousValue = newValue;
-                }
+                var content = editor.getValue();
+                app.update(content);
             });
 
             $("#mode").change(function() {
                 editor.setOption("mode", $(this).val());
+                app.setMode($(this).val());
             })
 
             $(window).on('hashchange', function() {
-                channel = document.location.hash.substring(1, document.location.hash.length);
-                ws.close()
-                ws = new WebSocket("ws://sockbin.wintermornings.net:30000/" + channel);
-                ws.onopen = function() {
-                    ws.send("@@~~3939~~@@");
-                };
-                ws.onmessage = function(e) {
-                    previousValue = e.data;
-                    editor.setValue(e.data);
-                };
+                var channel = document.location.hash.substring(1, document.location.hash.length);
+                app.openChannel(channel);
                 $("#channel-name").text(channel);
             });
 
