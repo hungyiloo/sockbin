@@ -10,6 +10,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/sql/sql.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/xml/xml.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/css/css.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/python/python.min.js"></script>
         <meta charset="utf-8">
         <title>SockBin</title>
 
@@ -38,6 +39,12 @@
             #headerbar h1 .dark {
                 color: #444;
             }
+            #headerbar h1 .light {
+                color: #aaa;
+            }
+            #headerbar h1 .faded {
+                color: #ccc;
+            }
             .CodeMirror {
               border: 1px solid #eee;
               height: auto;
@@ -47,25 +54,33 @@
               overflow-y: hidden;
               overflow-x: auto;
             }
+            #channel-name {
+                cursor: pointer;
+            }
         </style>
     </head>
     <body>
         <div id="headerbar">
-            <h1>SOCK<span class="dark">BIN</span></h1>
+            <h1>SOCK<span class="dark">BIN</span><span class="faded">#</span><span id="channel-name" class="light"></span></h1>
             <select id="mode">
                 <option value="htmlmixed">Mixed HTML/JS/CSS</option>
                 <option value="javascript">Javascript</option>
                 <option value="text/x-csharp">C#</option>
                 <option value="text/x-java">Java</option>
                 <option value="text/x-mariadb">SQL</option>
+                <option value="python">Python</option>
             </select>
         </div>
         <textarea id="miku"></textarea>
         <script>
         $(function() {
-            var channel = document.location.search.substring(1, document.location.search.length);
-            if (!channel)
-                channel = "welcome"
+            var channel = document.location.hash.substring(1, document.location.hash.length);
+            if (!channel) {
+                channel = "lobby"
+                document.location.hash = "#" + channel;
+            }
+            $("#channel-name").text(channel);
+
             var ws = new WebSocket("ws://sockbin.wintermornings.net:30000/" + channel);
             var previousValue = null;
             ws.onopen = function() {
@@ -95,6 +110,27 @@
 
             $("#mode").change(function() {
                 editor.setOption("mode", $(this).val());
+            })
+
+            $(window).on('hashchange', function() {
+                channel = document.location.hash.substring(1, document.location.hash.length);
+                ws.close()
+                ws = new WebSocket("ws://sockbin.wintermornings.net:30000/" + channel);
+                ws.onopen = function() {
+                    ws.send("@@~~3939~~@@");
+                };
+                ws.onmessage = function(e) {
+                    previousValue = e.data;
+                    editor.setValue(e.data);
+                };
+                $("#channel-name").text(channel);
+            });
+
+            $("#channel-name").click(function() {
+                var destination = prompt("Change channel?");
+                if (destination && destination.length > 0) {
+                    document.location.hash = "#" + destination;
+                }
             })
         });
         </script>
