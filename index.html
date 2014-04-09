@@ -144,7 +144,7 @@
             };
             me.setMode = function (mode) {
                 sendMessage("set_mode", mode);
-            }
+            };
 
             // Server side calls (RPC)
             var remote = {
@@ -188,7 +188,8 @@
                 autofocus: true,
                 theme: "monokai",
                 lineNumbers: true,
-                lineWrapping: true
+                lineWrapping: true,
+                indentWithTabs: false
             });
 
             editor.on("change", function(){
