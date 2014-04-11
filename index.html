@@ -13,6 +13,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/xml/xml.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/css/css.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/python/python.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/codemirror/4.0.3/mode/markdown/markdown.min.js"></script>
         <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 
         <meta charset="utf-8">
@@ -99,6 +100,7 @@
             <h1>SOCK<span class="dark">BIN</span><span class="faded">#</span><span id="channel-name" class="light"></span></h1>
             <div id="mode-container">
                 <select id="mode" class="form-control">
+                    <option value="markdown">Markdown</option>
                     <option value="htmlmixed">Mixed HTML/JS/CSS</option>
                     <option value="javascript">Javascript</option>
                     <option value="text/x-csharp">C#</option>
@@ -116,7 +118,7 @@
             var me = this;
             var ws = null;
             var previousContent = null;
-            var defaultContent = atob("PCFET0NUWVBFIGh0bWw+CjxodG1sPgogICAgPGhlYWQ+CiAgICAgICAgPHRpdGxlPlNvY2tCaW48L3RpdGxlPgogICAgPC9oZWFkPgogICAgPGJvZHk+CiAgICAgICAgPGgxPkhpISBUaGlzIGlzIFNvY2tCaW4uPC9oMT4KICAgICAgICAKICAgICAgICA8cD5Tb2NrQmluIGlzIG1lYW50IGZvciBxdWljayBjb2RlIHNoYXJpbmcuPC9wPgogICAgICAgIDxwPkNvcHkgdGhlIFVSTCBmcm9tIHRoZSBhZGRyZXNzIGJhciB0byBzaGFyZSB0aGlzIGNoYW5uZWwgd2l0aCBhbnkgbnVtYmVyIG9mIHBlb3BsZS48L3A+CiAgICAgICAgCiAgICAgICAgCiAgICAgICAgPGgyPlBsZWFzZSBOb3RlITwvaDI+CiAgICAgICAgPHA+CiAgICAgICAgICAgIEVkaXRzIGFyZSBtYWRlIGluIHJlYWwgdGltZSBiZXR3ZWVuIGFsbCB1c2Vycywgc28gPHN0cm9uZz5DT05GTElDVFMgV0lMTCBPQ0NVUjwvc3Ryb25nPiAKICAgICAgICAgICAgaWYgbW9yZSB0aGFuIG9uZSBwZXJzb24gaXMgbWFraW5nIGNoYW5nZXMgYXQgdGhlIHNhbWUgdGltZS4KICAgICAgICA8L3A+CiAgICAgICAgPHA+CiAgICAgICAgICAgIFdoZW4gZXZlcnlvbmUgaGFzIGxlZnQgdGhlIGNoYW5uZWwsIHRoZSBjb2RlIHdpbGwgYmUgPHN0cm9uZz5ERUxFVEVEIEZPUkVWRVI8L3N0cm9uZz4uCiAgICAgICAgICAgIE1ha2Ugc3VyZSB0byA8c3Ryb25nPlNBVkUgWU9VUiBXT1JLPC9zdHJvbmc+IGJlZm9yZSB5b3UgZ28uCiAgICAgICAgPC9wPgogICAgPC9ib2R5Pgo8L2h0bWw+");
+            var defaultContent = atob("SGkhIFRoaXMgaXMgU29ja0Jpbi4KPT09PT09PT09PT09PT09PT09PT0KClNvY2tCaW4gaXMgbWVhbnQgdG8gYmUgdXNlZCBmb3I6CgoqIAlRdWljayBjb2RlIHNoYXJpbmcgKGEgbGEgcGFzdGViaW4pCiogCUFkLWhvYyBwZWVyIHJldmlldyAoImNhbiB5b3UgZml4IHRoZSBidWcgaW4gdGhpcyBhbGdvcml0aG0/IikKKiAJUmV2aXNpbmcgYW55IHNvcnQgb2YgY29udGVudCBiZXR3ZWVuIHR3byBvciBtb3JlIHBlb3BsZQoqIAlEZW1vbnN0cmF0aW5nIGFuZCB0ZWFjaGluZyBjb2RlCgpQbGVhc2UgTm90ZToKCiogCUVkaXRzIGFyZSBtYWRlIGluIHJlYWwgdGltZSBiZXR3ZWVuIGFsbCB1c2Vycywgc28gKkNPTkZMSUNUUyBXSUxMIE9DQ1VSKgoJaWYgbW9yZSB0aGFuIG9uZSBwZXJzb24gaXMgbWFraW5nIGNoYW5nZXMgYXQgdGhlIHNhbWUgdGltZS4KKglXaGVuIGV2ZXJ5b25lIGhhcyBsZWZ0IHRoZSBjaGFubmVsLCB0aGUgY29kZSB3aWxsIGJlICpERUxFVEVEIEZPUkVWRVIqCioJTWFrZSBzdXJlIHRvICpTQVZFIFlPVVIgV09SSyogYmVmb3JlIHlvdSBnbwogICAgICAgIApIYXZlIGZ1biBhbmQgaGFwcHkgY29kaW5nIQoKCUNvcHkgdGhlIFVSTCBmcm9tIHRoZSBhZGRyZXNzIGJhciB0byBzaGFyZSB0aGlzIGNoYW5uZWwgd2l0aCBvdGhlcnMuCg==");
 
             function sendMessage(command, payload) {
                 ws.send(JSON.stringify({command: command, payload: payload}));
@@ -184,7 +186,7 @@
                 mode: "text/html",
                 indentUnit: 4,
                 tabSize: 4,
-                mode: "htmlmixed",
+                mode: "markdown",
                 autofocus: true,
                 theme: "monokai",
                 lineNumbers: true,
