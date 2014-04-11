@@ -12,7 +12,7 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
             channels[channel] = {
                 'listeners': [],
                 'content': "",
-                'mode': "htmlmixed",
+                'mode': "markdown",
             }
         channels[self.channel]['listeners'].append(self)
 
@@ -39,9 +39,10 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
             listener.send_back(command, payload)
 
     def on_message(self, data):
-        def update(content):
-            channels[self.channel]['content'] = content
-            self.send_out('update', content)
+        def update(update_data):
+            channels[self.channel]['content'] = update_data['content']
+            self.send_out('update', update_data['content'])
+            self.send_out('setCursor', update_data['position'])
         def load():
             self.send_back('update', channels[self.channel]['content'])
             self.send_back('setMode', channels[self.channel]['mode'])
