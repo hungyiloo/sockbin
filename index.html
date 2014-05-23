@@ -15,7 +15,7 @@
         <script src="./vendor/python.min.js"></script>
         <script src="./vendor/markdown.min.js"></script>
         <script src="./vendor/bootstrap.min.js"></script>
-	    <script src="./vendor/lz-string-1.3.3-min.js"></script>
+	    <!-- <script src="./vendor/lz-string-1.3.3-min.js"></script>-->
 
         <!-- Comment the above and uncomment below to use CDN 
 
@@ -47,7 +47,7 @@
                 background: #272822;
             }
             body {
-                padding-top: 45px;
+                padding-top: 44px;
             }
             #headerbar {
                 padding: 10px;
@@ -84,6 +84,7 @@
                 color: #555;
             }
             .CodeMirror {
+                width: 100%;
                 clear:both;
                 height: auto;
                 font-family: Consolas, monospace;
@@ -161,7 +162,6 @@
         var SockBin = function(initChannel) {
             var me = this;
             var ws = null;
-            var defaultContent = atob("SGkhIFRoaXMgaXMgU29ja0Jpbi4KPT09PT09PT09PT09PT09PT09PT0KClNvY2tCaW4gaXMgbWVhbnQgdG8gYmUgdXNlZCBmb3I6CgoqIAlRdWljayBjb2RlIHNoYXJpbmcgKGEgbGEgcGFzdGViaW4pCiogCUFkLWhvYyBwZWVyIHJldmlldyAoImNhbiB5b3UgZml4IHRoZSBidWcgaW4gdGhpcyBhbGdvcml0aG0/IikKKiAJUmV2aXNpbmcgYW55IHNvcnQgb2YgY29udGVudCBiZXR3ZWVuIHR3byBvciBtb3JlIHBlb3BsZQoqIAlEZW1vbnN0cmF0aW5nIGFuZCB0ZWFjaGluZyBjb2RlCgpQbGVhc2UgTm90ZToKCiogCUVkaXRzIGFyZSBtYWRlIGluIHJlYWwgdGltZSBiZXR3ZWVuIGFsbCB1c2Vycywgc28gKkNPTkZMSUNUUyBXSUxMIE9DQ1VSKgoJaWYgbW9yZSB0aGFuIG9uZSBwZXJzb24gaXMgbWFraW5nIGNoYW5nZXMgYXQgdGhlIHNhbWUgdGltZS4KKglXaGVuIGV2ZXJ5b25lIGhhcyBsZWZ0IHRoZSBjaGFubmVsLCB0aGUgY29kZSB3aWxsIGJlICpERUxFVEVEIEZPUkVWRVIqCioJTWFrZSBzdXJlIHRvICpTQVZFIFlPVVIgV09SSyogYmVmb3JlIHlvdSBnbwogICAgICAgIApIYXZlIGZ1biBhbmQgaGFwcHkgY29kaW5nIQoKCUNvcHkgdGhlIFVSTCBmcm9tIHRoZSBhZGRyZXNzIGJhciB0byBzaGFyZSB0aGlzIGNoYW5uZWwgd2l0aCBvdGhlcnMuCg==");
             var lockTimer = null;
             me.lastRemoteEditPosition = 0;
             var locked = false;
@@ -197,7 +197,6 @@
             };
             me.update = function (changeObj) {
                 if (!locked) {
-                    //sendMessage("update", {content: LZString.compressToBase64(newContent), position: editor.getCursor().line});
                     sendMessage("update", changeObj);
                 }
             };
@@ -209,24 +208,23 @@
             // Server side calls (RPC)
             var remote = {
                 update: function(changeObj) {
-                    // if (editor.getValue() === "" && changeObj.text[0] == "") {
-                    //     editor.setValue(defaultContent)
-                    // }
-                    // else {
-                        //content = LZString.decompressFromBase64(content);
-                        if (lockTimer !== null)
-                            clearTimeout(lockTimer);
-                        lock();
-                        if (editor.getValue() === "")
-                            editor.setValue(changeObj.text.join("\n"));
-                        else
-                            editor.replaceRange(
-                                changeObj.text.join("\n"),
-                                changeObj.from,
-                                changeObj.to
-                            );
-                        lockTimer = setTimeout(unlock, 1000);
-                    // }
+                    if (lockTimer !== null)
+                        clearTimeout(lockTimer);
+                    lock();
+                    if (editor.getValue() === "") { // Detect first "update", set initial value
+                        editor.setValue(changeObj.text.join("\n"));
+                        // Hack to get codemirror to re-render code on first populate, otherwise with word wrap it glitches up and shows only one line.
+                        // The hack seems to fix it by triggering some internal thingy in codemirror which happens on resize
+                        window.dispatchEvent(new Event('resize'));
+                    }
+                    else {
+                        editor.replaceRange(
+                            changeObj.text.join("\n"),
+                            changeObj.from,
+                            changeObj.to
+                        );
+                    }
+                    lockTimer = setTimeout(unlock, 1000);
                 },
                 setMode: function(mode) {
                     editor.setOption("mode", mode);

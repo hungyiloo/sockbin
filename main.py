@@ -44,19 +44,16 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
 
             # Merge the update into the server instance of the channel's content
             if len(channel_content) > 0:
+                # Extract some positioning data and the edited text
                 new_lines = change_obj['text']
                 start_char = int(change_obj['from']['ch'])
                 start_line = int(change_obj['from']['line'])
                 end_char = int(change_obj['to']['ch'])
                 end_line = int(change_obj['to']['line'])
 
-                # if start_line == end_line and len(new_lines) == 1:
-                #     channel_content[start_line] = (
-                #         (channel_content[start_line][:start_char] if len(channel_content[start_line]) > 0 and start_char != 0 else "") + 
-                #         new_lines[0] + 
-                #         (channel_content[end_line][end_char:] if len(channel_content[end_line]) > 0 and end_char != 0 else "")
-                #     )
-                # else:
+                # For every new line, check whether it's the start line or end line of the changeset,
+                # and in each case, tack on the remaining (old) portion of that line in the right place
+                # then use that line as the "new" one in the result
                 revised_content = []
                 new_line_idx = 0
                 for new_line in new_lines:
@@ -68,14 +65,14 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
                         new_line = new_line + (channel_content[end_line][end_char:] if len(channel_content[end_line]) > 0 and end_char < len(channel_content[end_line]) else "")
                     revised_content.append(new_line)
                     new_line_idx += 1
-                if end_line + 1 >= len(channel_content):
-                    channels[self.channel]['content'] = channel_content[:start_line] + revised_content
-                else:
-                    channels[self.channel]['content'] = channel_content[:start_line] + revised_content + channel_content[end_line+1:]
+
+                # Here we look to see if there was any content outside the edit boundary.
+                # If there was, we need to tack it onto the beginning and end where appropriate.
+                channels[self.channel]['content'] = channel_content[:start_line] + revised_content + (channel_content[end_line+1:] if end_line + 1 >= len(channel_content) else [])
             else:
                 channels[self.channel]['content'] = change_obj['text']
 
-            # Broadcast the update
+            # Broadcast the update to the other listeners
             self.send_out('update', change_obj)
             self.send_out('setCursor', int(change_obj['from']['line']))
         def load():
