@@ -68,7 +68,7 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
 
                 # Here we look to see if there was any content outside the edit boundary.
                 # If there was, we need to tack it onto the beginning and end where appropriate.
-                channels[self.channel]['content'] = channel_content[:start_line] + revised_content + (channel_content[end_line+1:] if end_line + 1 >= len(channel_content) else [])
+                channels[self.channel]['content'] = channel_content[:start_line] + revised_content + (channel_content[end_line+1:] if end_line + 1 <= len(channel_content) else [])
             else:
                 channels[self.channel]['content'] = change_obj['text']
 
