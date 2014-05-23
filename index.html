@@ -216,7 +216,8 @@
                         editor.setValue(changeObj.text.join("\n"));
                         // Hack to get codemirror to re-render code on first populate, otherwise with word wrap it glitches up and shows only one line.
                         // The hack seems to fix it by triggering some internal thingy in codemirror which happens on resize
-                        window.dispatchEvent(new Event('resize'));
+                        if (window.hasOwnProperty("dispatchEvent"))
+                            window.dispatchEvent(new Event('resize'));
                     }
                     else {
                         editor.replaceRange(
