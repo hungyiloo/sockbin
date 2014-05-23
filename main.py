@@ -11,7 +11,7 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
         if channel not in channels:
             channels[channel] = {
                 'listeners': [],
-                'content': "",
+                'content': [""],
                 'mode': "markdown",
             }
         channels[self.channel]['listeners'].append(self)
@@ -39,17 +39,57 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
             listener.send_back(command, payload)
 
     def on_message(self, data):
-        def update(update_data):
-            channels[self.channel]['content'] = update_data['content']
-            self.send_out('update', update_data['content'])
-            self.send_out('setCursor', update_data['position'])
+        def update(change_obj):
+            channel_content = channels[self.channel]['content']
+
+            # Merge the update into the server instance of the channel's content
+            if len(channel_content) > 0:
+                new_lines = change_obj['text']
+                start_char = int(change_obj['from']['ch'])
+                start_line = int(change_obj['from']['line'])
+                end_char = int(change_obj['to']['ch'])
+                end_line = int(change_obj['to']['line'])
+
+                # if start_line == end_line and len(new_lines) == 1:
+                #     channel_content[start_line] = (
+                #         (channel_content[start_line][:start_char] if len(channel_content[start_line]) > 0 and start_char != 0 else "") + 
+                #         new_lines[0] + 
+                #         (channel_content[end_line][end_char:] if len(channel_content[end_line]) > 0 and end_char != 0 else "")
+                #     )
+                # else:
+                revised_content = []
+                new_line_idx = 0
+                for new_line in new_lines:
+                    if new_line_idx == 0:
+                        # first line merge, make sure to add leading chars
+                        new_line = (channel_content[start_line][:start_char] if len(channel_content[start_line]) > 0 and start_char <= len(channel_content[start_line]) else "") + new_line
+                    if new_line_idx == len(new_lines) - 1:
+                        # last line merge, make sure to add trailing chars
+                        new_line = new_line + (channel_content[end_line][end_char:] if len(channel_content[end_line]) > 0 and end_char < len(channel_content[end_line]) else "")
+                    revised_content.append(new_line)
+                    new_line_idx += 1
+                if end_line + 1 >= len(channel_content):
+                    channels[self.channel]['content'] = channel_content[:start_line] + revised_content
+                else:
+                    channels[self.channel]['content'] = channel_content[:start_line] + revised_content + channel_content[end_line+1:]
+            else:
+                channels[self.channel]['content'] = change_obj['text']
+
+            # Broadcast the update
+            self.send_out('update', change_obj)
+            self.send_out('setCursor', int(change_obj['from']['line']))
         def load():
-            self.send_back('update', channels[self.channel]['content'])
+            self.send_back('update', {
+                'from': { 'ch': 0, 'line': 0 },
+                'to': { 'ch': 0, 'line': 0 },
+                'text': channels[self.channel]['content']
+            })
             self.send_back('setMode', channels[self.channel]['mode'])
             self.send_all('setUserCount', len(channels[self.channel]['listeners']))
         def set_mode(mode):
             channels[self.channel]['mode'] = mode
             self.send_out('setMode', mode)
+
 
         data = json.loads(data)
         if 'payload' in data:

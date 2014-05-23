@@ -161,20 +161,22 @@
         var SockBin = function(initChannel) {
             var me = this;
             var ws = null;
-            var previousContent = null;
             var defaultContent = atob("SGkhIFRoaXMgaXMgU29ja0Jpbi4KPT09PT09PT09PT09PT09PT09PT0KClNvY2tCaW4gaXMgbWVhbnQgdG8gYmUgdXNlZCBmb3I6CgoqIAlRdWljayBjb2RlIHNoYXJpbmcgKGEgbGEgcGFzdGViaW4pCiogCUFkLWhvYyBwZWVyIHJldmlldyAoImNhbiB5b3UgZml4IHRoZSBidWcgaW4gdGhpcyBhbGdvcml0aG0/IikKKiAJUmV2aXNpbmcgYW55IHNvcnQgb2YgY29udGVudCBiZXR3ZWVuIHR3byBvciBtb3JlIHBlb3BsZQoqIAlEZW1vbnN0cmF0aW5nIGFuZCB0ZWFjaGluZyBjb2RlCgpQbGVhc2UgTm90ZToKCiogCUVkaXRzIGFyZSBtYWRlIGluIHJlYWwgdGltZSBiZXR3ZWVuIGFsbCB1c2Vycywgc28gKkNPTkZMSUNUUyBXSUxMIE9DQ1VSKgoJaWYgbW9yZSB0aGFuIG9uZSBwZXJzb24gaXMgbWFraW5nIGNoYW5nZXMgYXQgdGhlIHNhbWUgdGltZS4KKglXaGVuIGV2ZXJ5b25lIGhhcyBsZWZ0IHRoZSBjaGFubmVsLCB0aGUgY29kZSB3aWxsIGJlICpERUxFVEVEIEZPUkVWRVIqCioJTWFrZSBzdXJlIHRvICpTQVZFIFlPVVIgV09SSyogYmVmb3JlIHlvdSBnbwogICAgICAgIApIYXZlIGZ1biBhbmQgaGFwcHkgY29kaW5nIQoKCUNvcHkgdGhlIFVSTCBmcm9tIHRoZSBhZGRyZXNzIGJhciB0byBzaGFyZSB0aGlzIGNoYW5uZWwgd2l0aCBvdGhlcnMuCg==");
             var lockTimer = null;
             me.lastRemoteEditPosition = 0;
+            var locked = false;
 
             function sendMessage(command, payload) {
                 ws.send(JSON.stringify({command: command, payload: payload}));
             }
 
             function lock() {
+                locked = true;
                 editor.setOption("readOnly", true);
                 $("#lock-indicator").css("opacity", 1).attr('title', "Hang on, someone's making some changes...");
             }
             function unlock() {
+                locked = false;
                 editor.setOption("readOnly", false);
                 $("#lock-indicator").css("opacity", 0.35).attr('title', "Go ahead! No one is editing.");
             }
@@ -193,10 +195,10 @@
                     remote[data.command](data.payload);
                 };
             };
-            me.update = function (newContent) {
-                if ((newContent != previousContent && previousContent != null) || (previousContent == null && newContent != defaultContent)) {
-                    sendMessage("update", {content: LZString.compressToBase64(newContent), position: editor.getCursor().line});
-                    previousContent = newContent
+            me.update = function (changeObj) {
+                if (!locked) {
+                    //sendMessage("update", {content: LZString.compressToBase64(newContent), position: editor.getCursor().line});
+                    sendMessage("update", changeObj);
                 }
             };
             me.setMode = function (mode) {
@@ -206,19 +208,25 @@
 
             // Server side calls (RPC)
             var remote = {
-                update: function(content) {
-                    content = LZString.decompressFromBase64(content);
-                    if (content === null || (previousContent == null && content == "")) {
-                        editor.setValue(defaultContent)
-                    }
-                    else {
+                update: function(changeObj) {
+                    // if (editor.getValue() === "" && changeObj.text[0] == "") {
+                    //     editor.setValue(defaultContent)
+                    // }
+                    // else {
+                        //content = LZString.decompressFromBase64(content);
                         if (lockTimer !== null)
                             clearTimeout(lockTimer);
                         lock();
-                        previousContent = content;
-                        editor.setValue(content);
+                        if (editor.getValue() === "")
+                            editor.setValue(changeObj.text.join("\n"));
+                        else
+                            editor.replaceRange(
+                                changeObj.text.join("\n"),
+                                changeObj.from,
+                                changeObj.to
+                            );
                         lockTimer = setTimeout(unlock, 1000);
-                    }
+                    // }
                 },
                 setMode: function(mode) {
                     editor.setOption("mode", mode);
@@ -273,9 +281,8 @@
                 gutters: ['activity', 'CodeMirror-linenumbers']
             });
 
-            editor.on("change", function() {
-                var content = editor.getValue();
-                app.update(content);
+            editor.on("change", function(e, changeObj) {;
+                app.update(changeObj);
             });
 
             $("#mode").change(function() {
