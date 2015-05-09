@@ -96,8 +96,11 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
 
 application = tornado.web.Application([
     (r"/([0-9a-zA-Z]+)", SockBinWebSocket),
-])
+], ssl_options = {
+    "certfile": "server.crt",
+    "keyfile": "server.key"
+})
 
 if __name__ == "__main__":
-    application.listen(30000)
+    application.listen(10001, address='127.0.0.1')
     tornado.ioloop.IOLoop.instance().start()
