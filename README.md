@@ -1,7 +1,7 @@
 SockBin
 =======
 
-A collaborative code sharing tool using websockets for real-time editing. Built for speed, clarity and fun. See [http://sockbin.wintermornings.net/](http://sockbin.wintermornings.net/) for a running example. Have a cool suggestion? Let me know!
+A collaborative code sharing tool using websockets for real-time editing. Built for speed, clarity and fun. See [http://wintermornings.net/sockbin](http://wintermornings.net/sockbin) for a running example. Have a cool suggestion? Let me know!
 
 Requirements
 ------------
