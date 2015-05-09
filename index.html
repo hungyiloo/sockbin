@@ -102,12 +102,15 @@
             #channel-name {
                 cursor: pointer;
             }
-            #user-count {
+            #user-count, #connection-status {
                 position: relative;
                 top: 0.2em;
                 line-height: 1.2em;
                 border-radius: 2em;
                 cursor:default;
+            }
+            #user-count:after {
+                content: " online";
             }
             #mode-container {
                 width: 140px;
@@ -151,7 +154,8 @@
                     <option value="">Plaintext</option>
                 </select>
             </div>
-            <span id="user-count" class="label label-default"></span>
+            <span id="user-count" class="label label-info"></span>
+            <span id="connection-status" class="label label-danger">Connecting...</span>
             <div id="lock-indicator" title="Go ahead! No one is editing."></div>
         </div>
         <textarea id="miku"></textarea>
@@ -164,7 +168,11 @@
             var locked = false;
 
             function sendMessage(command, payload) {
-                ws.send(JSON.stringify({command: command, payload: payload}));
+                if (ws && ws.readyState == 1) {
+                    ws.send(JSON.stringify({command: command, payload: payload}));
+                } else {
+                    $("#connection-status").show();
+                }
             }
 
             function lock() {
@@ -178,14 +186,16 @@
                 $("#lock-indicator").css("opacity", 0.35).attr('title', "Go ahead! No one is editing.");
             }
 
-            // CLient side calls
+            // Client side calls
             me.openChannel = function(channel) {
                 if (ws) {
-                    ws.close()
+                    ws.close();
+                    editor.setValue("");
                 }
                 ws = new WebSocket("wss://wintermornings.net/sockbin/api/" + channel);
                 ws.onopen = function() {
-                    sendMessage("load")
+                    sendMessage("load");
+                    $("#connection-status").hide();
                 };
                 ws.onmessage = function(e) {
                     var data = JSON.parse(e.data);
