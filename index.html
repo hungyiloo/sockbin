@@ -75,13 +75,13 @@
                 font-weight: bold;
                 cursor: default;
             }
-            #headerbar h1 .dark {
+            .dark {
                 color: #aaa;
             }
-            #headerbar h1 .light {
+            .light {
                 color: #999;
             }
-            #headerbar h1 .faded {
+            .faded {
                 color: #ccc;
             }
             .CodeMirror {
@@ -238,6 +238,14 @@
                 word-wrap: break-word;
                 max-width: 380px;
             }
+            #username-container {
+                font-size: 1.5em;
+                font-weight: bold;
+                font-family: "Segoe UI";
+                text-align: center;
+                margin-top: 4px;
+                cursor: pointer;
+            }
         </style>
     </head>
     <body class="chat-enabled">
@@ -270,7 +278,11 @@
             <form id="message-sender">
                 <input id="message-content" type="text" placeholder="Send a message..."></input>
             </form>    
-            <div id="chat-header"></div>
+            <div id="chat-header">
+                <div id="username-container">
+                    <span class="faded">@</span><span id="username" class="light"></span>
+                </div>
+            </div>
         </div>
         <script>
         var LiveBin = function(initChannel) {
@@ -279,6 +291,7 @@
             var lockTimer = null;
             me.lastRemoteEditPosition = 0;
             var locked = false;
+            var username = null;
 
             function sendMessage(command, payload) {
                 if (ws && ws.readyState == 1) {
@@ -308,7 +321,6 @@
                         .append($("<span>").addClass("username").text(message.username))
                         .append($("<dd>").addClass("content").text(message.content))
                 );
-                console.log(wasAtEnd);
                 if (wasAtEnd) {
                     uiScrollChatToBottom();
                 }
@@ -317,6 +329,36 @@
             function uiScrollChatToBottom() {
                 $("#messages").animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
             }
+            
+            function generateUsername() {
+                var result = "";
+                var consonants = "bcdfghjklmnpqrstvwxz";
+                var vowels = "aeiouy";
+                var numerals = "123456789";
+            
+                for (var i = 0; i < 5; i++) {
+                    var charset = i % 2 == 0 ? consonants : vowels;
+                    result += charset.charAt(Math.floor(Math.random() * charset.length));
+                }
+                
+                result += "_";
+                
+                for (var i = 0; i < 2; i++) {
+                    result += numerals.charAt(Math.floor(Math.random() * numerals.length));
+                }
+            
+                return result;
+            }
+            
+            me.setUsername = function(name) {
+                localStorage.setItem("username", name);
+                username = name;
+                $("#username").text(name);
+            };
+            
+            me.getUsername = function() {
+                return username || localStorage.getItem("username");
+            };
 
             // Client side calls
             me.openChannel = function(channel) {
@@ -401,6 +443,13 @@
 
             if (initChannel) {
                 me.openChannel(initChannel);
+                
+                // Generate new username, or load old one if exists
+                if (me.getUsername() == null) {
+                    me.setUsername(generateUsername());
+                } else {
+                    me.setUsername(me.getUsername());
+                }
             }
         };
         $(function() {
@@ -467,11 +516,18 @@
                 }
                 
                 app.sendChat({
-                    username: "Anonymous",
+                    username: app.getUsername(),
                     content: messageContent
                 });
                 
                 $("#message-content").val("");
+            });
+            
+            $("#username-container").click(function(e) {
+                var newUsername = prompt("Change my username to:", app.getUsername());
+                if (newUsername !== null && newUsername !== "") {
+                    app.setUsername(newUsername);
+                }
             });
         });
         </script>
