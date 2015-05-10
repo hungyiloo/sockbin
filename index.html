@@ -149,15 +149,16 @@
                 background: #f9f9f9;
                 border-left: 1px solid #ddd;
                 transition: 0.5s width;
+                z-index: 10;
             }
             #chat-header {
                 background: #f5f5f5;
                 position: fixed;
                 top: 0;
-                right: 0;
+                right: -400px;
                 height: 44px;
-                width: 0px;
-                transition: 0.5s width;
+                width: 400px;
+                transition: 0.5s right;
                 border-left: 1px solid #ddd;
                 border-bottom: 1px solid #ddd;
             }
@@ -180,14 +181,12 @@
             }
             .chat-enabled #chat-area { 
                 width: 400px; 
-                z-index: 10;
             }
             .chat-enabled #chat-header { 
-                width: 400px; 
-                z-index: 15;
+                right: 0; 
             }
             .chat-enabled #messages { 
-                width: 415px; 
+                right: -15px; 
             }
             
             #message-sender {
@@ -196,27 +195,30 @@
                 width: 100%;
                 display: block;
             }
-            #message-sender input[type=text] {
+            #message-sender textarea {
                 border: none;
                 border-top: 1px solid #ddd;
                 height: 44px;
                 width: 400px;
                 font-size: 1em;
                 outline: none !important;
-                padding: 10px;
+                padding: 12px 10px;
                 color: #444;
+                display: block;
+                resize: none;
+                overflow: hidden;
             }
             
             #messages {
                 padding: 44px 0 44px 0;
                 height: 100%;
-                width: 0px;
                 position: fixed;
-                right: -15px;
+                width: 415px; 
+                right: -415px;
                 top: 0;
                 overflow-y: auto;
                 overflow-x: hidden;
-                transition: 0.5s width;
+                transition: 0.5s right;
             }
             #messages .message {
                 border-bottom: 1px solid #eee;
@@ -280,7 +282,7 @@
         <div id="chat-area">
             <div id="messages"></div>
             <form id="message-sender">
-                <input id="message-content" type="text" placeholder="Send a message..."></input>
+                <textarea id="message-content" type="text" placeholder="Send a message..."></textarea>
             </form>    
             <div id="chat-header">
                 <div id="username-container">
@@ -320,18 +322,28 @@
             function uiRenderChat(message) {
                 var $messages = $("#messages");
                 var wasAtEnd = $messages.scrollTop() + $messages.outerHeight() >= $messages[0].scrollHeight - 50;
-                $messages.append(
-                    $("<div>")
-                        .addClass("message")
-                        .append(
-                            $("<span>")
-                                .addClass("username")
-                                .css("color", getUsernameColor(message.username))
-                                .text(message.username)
-                        )
-                        .append($("<span>").addClass("content").text(message.content))
-                        .append($("<div>").css("clear", "both"))
-                );
+                
+                // Construct message
+                var message = $("<div>")
+                    .addClass("message")
+                    .append(
+                        $("<span>")
+                            .addClass("username")
+                            .css("color", getUsernameColor(message.username))
+                            .text(message.username)
+                    )
+                    .append($("<span>").addClass("content").text(message.content))
+                    .append($("<div>").css("clear", "both"));
+                    
+                // Fix newlines
+                function nl2br (str, is_xhtml) {   
+                    var breakTag = (is_xhtml || typeof is_xhtml === 'undefined') ? '<br />' : '<br>';    
+                    return (str + '').replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, '$1'+ breakTag +'$2');
+                }
+                message.find(".content").html(nl2br(message.find(".content").html()));
+                
+                $messages.append(message);
+                
                 if (wasAtEnd) {
                     uiScrollChatToBottom();
                 }
@@ -545,6 +557,14 @@
             
             $("#chat-toggle").click(function() {
                 $("body").toggleClass("chat-enabled");
+            });
+            $("#message-content").keydown(function(e){
+                var code = (e.keyCode ? e.keyCode : e.which);
+                var shifted = e.shiftKey;
+                if(code == 13 && !shifted) { // If enter key and not shifted, send message
+                    e.preventDefault();
+                    $(this).closest("form").submit();
+                }
             });
             
             $("#message-sender").submit(function(e) {
