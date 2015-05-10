@@ -129,6 +129,7 @@ var LiveBin = function(initChannel) {
         ws.onopen = function() {
             sendMessage("load");
             $("#connection-status").hide();
+            $("#messages").empty();
         };
         ws.onmessage = function(e) {
             var data = JSON.parse(e.data);
