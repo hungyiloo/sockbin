@@ -236,7 +236,7 @@
                 color: #444;
                 margin-bottom: 0.25em;
                 word-wrap: break-word;
-                width: 380px;
+                max-width: 380px;
             }
         </style>
     </head>
@@ -300,14 +300,22 @@
             }
             
             function uiRenderChat(message) {
-                $("#messages")
-                        .append(
-                            $("<div>")
-                                .addClass("message")
-                                .append($("<span>").addClass("username").text(message.username))
-                                .append($("<dd>").addClass("content").text(message.content))
-                        )
-                        .animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
+                var $messages = $("#messages");
+                var wasAtEnd = $messages.scrollTop() + $messages.outerHeight() >= $messages[0].scrollHeight - 50;
+                $messages.append(
+                    $("<div>")
+                        .addClass("message")
+                        .append($("<span>").addClass("username").text(message.username))
+                        .append($("<dd>").addClass("content").text(message.content))
+                );
+                console.log(wasAtEnd);
+                if (wasAtEnd) {
+                    uiScrollChatToBottom();
+                }
+            }
+            
+            function uiScrollChatToBottom() {
+                $("#messages").animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
             }
 
             // Client side calls
@@ -335,6 +343,7 @@
                 sendMessage("set_mode", mode);
             };
             me.sendChat = function(message) {
+                uiScrollChatToBottom();
                 uiRenderChat(message);
                 sendMessage("chat", message);
             };
