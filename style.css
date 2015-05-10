@@ -60,6 +60,9 @@ body {
 .cm-s-monokai .CodeMirror-gutters {
     background: #2d2e28 !important;
 }
+.cm-s-base16-light span.cm-string {
+    color: #e18d51;
+}
 #channel-name {
     cursor: pointer;
 }
