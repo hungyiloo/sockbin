@@ -210,6 +210,9 @@
             me.setMode = function (mode) {
                 sendMessage("set_mode", mode);
             };
+            me.sendChat = function(message) {
+                sendMessage("chat", message);
+            };
 
 
             // Server side calls (RPC)
@@ -256,6 +259,9 @@
                     me.lastRemoteEditPosition = position;
                     // The following line makes the window scroll to the remote editor's position
                     // window.scrollTo(0, editor.heightAtLine(position) - 44)
+                },
+                renderChat: function(message) {
+                    console.log(message);
                 }
             }
 

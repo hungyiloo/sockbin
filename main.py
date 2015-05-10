@@ -86,6 +86,8 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
         def set_mode(mode):
             channels[self.channel]['mode'] = mode
             self.send_out('setMode', mode)
+        def chat(message):
+            self.send_out('renderChat', message)
 
 
         data = json.loads(data)
@@ -97,8 +99,8 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
 application = tornado.web.Application([
     (r"/([0-9a-zA-Z]+)", SockBinWebSocket),
 ], ssl_options = {
-    "certfile": "server.crt",
-    "keyfile": "server.key"
+    "certfile": "/home/xacro/security/ssl.crt",
+    "keyfile": "/home/xacro/security/ssl.key"
 })
 
 if __name__ == "__main__":
