@@ -186,6 +186,9 @@
                 width: 400px; 
                 z-index: 15;
             }
+            .chat-enabled #messages { 
+                width: 415px; 
+            }
             
             #message-sender {
                 position: fixed;
@@ -197,7 +200,7 @@
                 border: none;
                 border-top: 1px solid #ddd;
                 height: 44px;
-                width: 100%;
+                width: 400px;
                 font-size: 1em;
                 outline: none !important;
                 padding: 10px;
@@ -205,15 +208,17 @@
             }
             
             #messages {
-                padding: 44px 10px 3em 10px;
+                padding: 54px 10px 54px 10px;
                 height: 100%;
-                width: 415px;
+                width: 0px;
                 position: fixed;
                 right: -15px;
                 top: 0;
-                overflow:auto;
+                overflow-y: auto;
+                overflow-x: hidden;
+                transition: 0.5s width;
             }
-            #messages dt {
+            #messages .message .username {
                 clear: left;
                 float: left;
                 font-size: 0.9em;
@@ -222,14 +227,16 @@
                 color: #bbb;
                 font-weight: bold;
             }
-            #messages dt:after {
+            #messages .message .username:after {
                 content: ":";
             }
-            #messages dd {
+            #messages .message .content {
                 float: left;
                 font-size: 1em;
                 color: #444;
                 margin-bottom: 0.25em;
+                word-wrap: break-word;
+                width: 380px;
             }
         </style>
     </head>
@@ -259,7 +266,7 @@
             <textarea id="miku"></textarea>
         </div>
         <div id="chat-area">
-            <dl id="messages"></dl>
+            <div id="messages"></div>
             <form id="message-sender">
                 <input id="message-content" type="text" placeholder="Send a message..."></input>
             </form>    
@@ -291,6 +298,17 @@
                 editor.setOption("readOnly", false);
                 $("#lock-indicator").css("opacity", 0.35).attr('title', "Go ahead and make a change! No one is editing.");
             }
+            
+            function uiRenderChat(message) {
+                $("#messages")
+                        .append(
+                            $("<div>")
+                                .addClass("message")
+                                .append($("<span>").addClass("username").text(message.username))
+                                .append($("<dd>").addClass("content").text(message.content))
+                        )
+                        .animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
+            }
 
             // Client side calls
             me.openChannel = function(channel) {
@@ -317,10 +335,7 @@
                 sendMessage("set_mode", mode);
             };
             me.sendChat = function(message) {
-                $("#messages")
-                        .append($("<dt>").text(message.username))
-                        .append($("<dd>").text(message.content))
-                        .animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
+                uiRenderChat(message);
                 sendMessage("chat", message);
             };
 
@@ -371,10 +386,7 @@
                     // window.scrollTo(0, editor.heightAtLine(position) - 44)
                 },
                 renderChat: function(message) {
-                    $("#messages")
-                        .append($("<dt>").text(message.username))
-                        .append($("<dd>").text(message.content))
-                        .animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
+                    uiRenderChat(message);
                 }
             }
 
