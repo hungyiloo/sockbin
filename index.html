@@ -208,7 +208,7 @@
             }
             
             #messages {
-                padding: 54px 10px 54px 10px;
+                padding: 44px 0 44px 0;
                 height: 100%;
                 width: 0px;
                 position: fixed;
@@ -217,6 +217,13 @@
                 overflow-y: auto;
                 overflow-x: hidden;
                 transition: 0.5s width;
+            }
+            #messages .message {
+                border-bottom: 1px solid #eee;
+                padding: 10px;
+            }
+            #messages .message:last-child {
+                border-bottom: none;
             }
             #messages .message .username {
                 clear: left;
@@ -227,14 +234,11 @@
                 color: #bbb;
                 font-weight: bold;
             }
-            #messages .message .username:after {
-                content: ":";
-            }
             #messages .message .content {
                 float: left;
                 font-size: 1em;
                 color: #444;
-                margin-bottom: 0.25em;
+                margin-bottom: 0.3em;
                 word-wrap: break-word;
                 max-width: 380px;
             }
@@ -292,6 +296,7 @@
             me.lastRemoteEditPosition = 0;
             var locked = false;
             var username = null;
+            var usernameColorMap = {};
 
             function sendMessage(command, payload) {
                 if (ws && ws.readyState == 1) {
@@ -318,8 +323,14 @@
                 $messages.append(
                     $("<div>")
                         .addClass("message")
-                        .append($("<span>").addClass("username").text(message.username))
-                        .append($("<dd>").addClass("content").text(message.content))
+                        .append(
+                            $("<span>")
+                                .addClass("username")
+                                .css("color", getUsernameColor(message.username))
+                                .text(message.username)
+                        )
+                        .append($("<span>").addClass("content").text(message.content))
+                        .append($("<div>").css("clear", "both"))
                 );
                 if (wasAtEnd) {
                     uiScrollChatToBottom();
@@ -348,6 +359,35 @@
                 }
             
                 return result;
+            }
+            
+            function getUsernameColor(username) {
+                var randomColors = kelly_colors_hex = [
+                    "#FFB300",
+                    "#803E75",
+                    "#FF6800",
+                    "#A6BDD7",
+                    "#C10020",
+                    "#CEA262",
+                    "#817066",
+                    "#007D34",
+                    "#F6768E",
+                    "#00538A",
+                    "#FF7A5C",
+                    "#53377A",
+                    "#FF8E00",
+                    "#B32851",
+                    "#F4C800",
+                    "#7F180D",
+                    "#93AA00",
+                    "#593315",
+                    "#F13A13",
+                    "#232C16",
+                ];
+                if (!usernameColorMap.hasOwnProperty(username)) {
+                    usernameColorMap[username] = randomColors[Math.floor(Math.random() * randomColors.length)];
+                }
+                return usernameColorMap[username];
             }
             
             me.setUsername = function(name) {
