@@ -47,6 +47,7 @@
             }
             body {
                 padding-top: 44px;
+                height: 100%;
             }
             #headerbar {
                 padding: 10px;
@@ -57,6 +58,7 @@
                 z-index: 5;
                 width: 100%;
                 border-bottom: 1px solid #ddd;
+                transition: 0.5s padding-right;
             }
             #headerbar > * {
                 float: right;
@@ -135,30 +137,134 @@
             .CodeMirror-gutter.activity {
                 width: 0.35em;
             }
+            #main-area {
+                transition: 0.5s padding-right;
+            }
+            #chat-area {
+                position: fixed;
+                right: 0;
+                top: 0;
+                height: 100%;
+                width: 0px;
+                background: #f9f9f9;
+                border-left: 1px solid #ddd;
+                transition: 0.5s width;
+            }
+            #chat-header {
+                background: #f5f5f5;
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 44px;
+                width: 0px;
+                transition: 0.5s width;
+                border-left: 1px solid #ddd;
+                border-bottom: 1px solid #ddd;
+            }
+            #chat-toggle {
+                color: #ddd;
+                font-size: 1.5em;
+                cursor: pointer;
+                position: relative;
+                right: 0.2em;
+                transition: 0.3s all;
+            }
+            #chat-toggle:hover {
+                color: #aaa;
+            }
+            .chat-enabled #headerbar { 
+                padding-right: 410px; 
+            }
+            .chat-enabled #main-area { 
+                padding-right: 400px; 
+            }
+            .chat-enabled #chat-area { 
+                width: 400px; 
+                z-index: 10;
+            }
+            .chat-enabled #chat-header { 
+                width: 400px; 
+                z-index: 15;
+            }
+            
+            #message-sender {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                display: block;
+            }
+            #message-sender input[type=text] {
+                border: none;
+                border-top: 1px solid #ddd;
+                height: 44px;
+                width: 100%;
+                font-size: 1em;
+                outline: none !important;
+                padding: 10px;
+                color: #444;
+            }
+            
+            #messages {
+                padding: 44px 10px 3em 10px;
+                height: 100%;
+                width: 365px;
+                position: fixed;
+                right: -15px;
+                top: 0;
+                overflow:auto;
+            }
+            #messages dt {
+                clear: left;
+                float: left;
+                font-size: 0.9em;
+                line-height: 1.8em;
+                margin-right: 0.5em;
+                color: #bbb;
+                font-weight: bold;
+            }
+            #messages dt:after {
+                content: ":";
+            }
+            #messages dd {
+                float: left;
+                font-size: 1em;
+                color: #444;
+                margin-bottom: 0.25em;
+            }
         </style>
     </head>
-    <body>
-        <div id="headerbar">
-            <h1>LIVE<span class="dark">BIN</span><span class="faded">#</span><span id="channel-name" class="light"></span></h1>
-            <div id="mode-container">
-                <select id="mode" class="form-control">
-                    <option value="markdown">Markdown</option>
-                    <option value="htmlmixed">Mixed HTML/JS/CSS</option>
-                    <option value="text/x-less">LESS/CSS</option>
-                    <option value="javascript">Javascript</option>
-                    <option value="text/x-csharp">C#</option>
-                    <option value="text/x-java">Java</option>
-                    <option value="text/x-mariadb">SQL</option>
-                    <option value="python">Python</option>
-                    <option value="xml">XML</option>
-                    <option value="">Plaintext</option>
-                </select>
+    <body class="chat-enabled">
+        <div id="main-area">
+            <div id="headerbar">
+                <h1>LIVE<span class="dark">BIN</span><span class="faded">#</span><span id="channel-name" class="light"></span></h1>
+                <div id="mode-container">
+                    <select id="mode" class="form-control">
+                        <option value="markdown">Markdown</option>
+                        <option value="htmlmixed">Mixed HTML/JS/CSS</option>
+                        <option value="text/x-less">LESS/CSS</option>
+                        <option value="javascript">Javascript</option>
+                        <option value="text/x-csharp">C#</option>
+                        <option value="text/x-java">Java</option>
+                        <option value="text/x-mariadb">SQL</option>
+                        <option value="python">Python</option>
+                        <option value="xml">XML</option>
+                        <option value="">Plaintext</option>
+                    </select>
+                </div>
+                <span id="chat-toggle" class="glyphicon glyphicon-comment" title="Show &amp; hide the chat pane"></span>
+                <span id="user-count" class="label label-info"></span>
+                <span id="connection-status" class="label label-danger">Connecting...</span>
+                <div id="lock-indicator" title="Go ahead and make a change! No one is editing."></div>
             </div>
-            <span id="user-count" class="label label-info"></span>
-            <span id="connection-status" class="label label-danger">Connecting...</span>
-            <div id="lock-indicator" title="Go ahead! No one is editing."></div>
+            <textarea id="miku"></textarea>
         </div>
-        <textarea id="miku"></textarea>
+        <div id="chat-area">
+            <dl id="messages"></dl>
+            <form id="message-sender">
+                <input id="message-content" type="text" placeholder="Send a message..."></input>
+            </form>    
+            <div id="chat-header"></div>
+        </div>
         <script>
         var LiveBin = function(initChannel) {
             var me = this;
@@ -183,7 +289,7 @@
             function unlock() {
                 locked = false;
                 editor.setOption("readOnly", false);
-                $("#lock-indicator").css("opacity", 0.35).attr('title', "Go ahead! No one is editing.");
+                $("#lock-indicator").css("opacity", 0.35).attr('title', "Go ahead and make a change! No one is editing.");
             }
 
             // Client side calls
@@ -211,6 +317,10 @@
                 sendMessage("set_mode", mode);
             };
             me.sendChat = function(message) {
+                $("#messages")
+                        .append($("<dt>").text(message.username))
+                        .append($("<dd>").text(message.content))
+                        .animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
                 sendMessage("chat", message);
             };
 
@@ -261,7 +371,10 @@
                     // window.scrollTo(0, editor.heightAtLine(position) - 44)
                 },
                 renderChat: function(message) {
-                    console.log(message);
+                    $("#messages")
+                        .append($("<dt>").text(message.username))
+                        .append($("<dd>").text(message.content))
+                        .animate({ scrollTop: $("#messages")[0].scrollHeight}, 500);
                 }
             }
 
@@ -318,6 +431,26 @@
 
             $("#lock-indicator").click(function() {
                 window.scrollTo(0, editor.heightAtLine(app.lastRemoteEditPosition) - 44)
+            });
+            
+            $("#chat-toggle").click(function() {
+                $("body").toggleClass("chat-enabled");
+            });
+            
+            $("#message-sender").submit(function(e) {
+                e.preventDefault();
+                var messageContent = $("#message-content").val();
+                
+                if (messageContent.length == 0) {
+                    return false;
+                }
+                
+                app.sendChat({
+                    username: "Anonymous",
+                    content: messageContent
+                });
+                
+                $("#message-content").val("");
             });
         });
         </script>
