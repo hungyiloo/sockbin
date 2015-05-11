@@ -172,12 +172,11 @@ body {
 }
 
 #messages {
-    padding: 44px 0 44px 0;
-    height: 100%;
     position: fixed;
     width: 415px; 
     right: -415px;
-    top: 0;
+    top: 44px;
+    bottom: 44px;
     overflow-y: auto;
     overflow-x: hidden;
     transition: 0.5s right;
