@@ -6,6 +6,7 @@ var LiveBin = function(initChannel) {
     var locked = false;
     var username = null;
     var usernameColorMap = {};
+    var liveWindow = null;
 
     function sendMessage(command, payload) {
         if (ws && ws.readyState == 1) {
@@ -220,6 +221,7 @@ $(function() {
         channel = "lobby"
         document.location.hash = "#" + channel;
     }
+    var liveWindow = null;
     var app = new LiveBin(channel);
     $("#channel-name").text(channel);
     document.title = "LiveBin#"+channel;
@@ -228,7 +230,7 @@ $(function() {
         mode: "text/html",
         indentUnit: 4,
         tabSize: 4,
-        mode: "markdown",
+        mode: "htmlmixed",
         theme: "base16-light",
         autofocus: true,
         lineNumbers: true,
@@ -239,11 +241,20 @@ $(function() {
 
     editor.on("change", function(e, changeObj) {;
         app.update(changeObj);
+        if (liveWindow !== null && !liveWindow.closed) {
+            URL.revokeObjectURL(liveWindow.document.location.href);
+            var blob = new Blob([editor.getValue()], { type: "text/html" });
+            var bURL = URL.createObjectURL(blob);
+            liveWindow.document.location.href = bURL;
+        }
     });
 
     $("#mode").change(function() {
         editor.setOption("mode", $(this).val());
         app.setMode($(this).val());
+        
+        // Show or hide the launch button depending on mode
+        $("#preview-toggle")[$(this).val() == "htmlmixed" ? "show" : "hide"]()
     })
 
     $(window).on('hashchange', function() {
@@ -296,6 +307,20 @@ $(function() {
         var newUsername = prompt("Change my username to:", app.getUsername());
         if (newUsername !== null && newUsername !== "") {
             app.setUsername(newUsername);
+        }
+    });
+    
+    $("#preview-toggle").click(function() {
+        if (liveWindow !== null && liveWindow.closed) {
+            liveWindow = null;
+        }
+        if (liveWindow === null) {
+            var blob = new Blob([editor.getValue()], { type: "text/html" });
+            var bURL = URL.createObjectURL(blob);
+            liveWindow = window.open(bURL, "liveWindow");
+        } else {
+            URL.revokeObjectURL(liveWindow.document.location.href);
+            liveWindow.close();
         }
     });
 });

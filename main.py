@@ -12,7 +12,7 @@ class SockBinWebSocket(tornado.websocket.WebSocketHandler):
             channels[channel] = {
                 'listeners': [],
                 'content': [""],
-                'mode': "markdown",
+                'mode': "htmlmixed",
             }
         channels[self.channel]['listeners'].append(self)
 

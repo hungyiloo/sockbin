@@ -124,7 +124,7 @@ body {
     border-left: 1px solid #ddd;
     border-bottom: 1px solid #ddd;
 }
-#chat-toggle {
+.icon-button {
     color: #ddd;
     font-size: 1.5em;
     cursor: pointer;
@@ -132,7 +132,7 @@ body {
     right: 0.2em;
     transition: 0.3s all;
 }
-#chat-toggle:hover {
+.icon-button:hover {
     color: #aaa;
 }
 .chat-enabled #headerbar { 
