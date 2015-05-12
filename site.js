@@ -242,10 +242,9 @@ $(function() {
     editor.on("change", function(e, changeObj) {;
         app.update(changeObj);
         if (liveWindow !== null && !liveWindow.closed) {
-            URL.revokeObjectURL(liveWindow.document.location.href);
-            var blob = new Blob([editor.getValue()], { type: "text/html" });
-            var bURL = URL.createObjectURL(blob);
-            liveWindow.document.location.href = bURL;
+            liveWindow.document.open();
+            liveWindow.document.write(editor.getValue());
+            liveWindow.document.close();
         }
     });
 
@@ -315,11 +314,11 @@ $(function() {
             liveWindow = null;
         }
         if (liveWindow === null) {
-            var blob = new Blob([editor.getValue()], { type: "text/html" });
-            var bURL = URL.createObjectURL(blob);
-            liveWindow = window.open(bURL, "liveWindow");
+            liveWindow = window.open("about:blank", "liveWindow");
+            liveWindow.document.open();
+            liveWindow.document.write(editor.getValue());
+            liveWindow.document.close();
         } else {
-            URL.revokeObjectURL(liveWindow.document.location.href);
             liveWindow.close();
         }
     });
