@@ -205,6 +205,14 @@ body {
     word-wrap: break-word;
     max-width: 380px;
 }
+#messages .message .content-time {
+    float: right;
+    margin-left: 0.5em;
+    margin-right: 15px;
+    margin-bottom: 1.3em;
+    font-size: 0.6em;
+    color: #bfbfbf;
+}
 #username-container {
     font-size: 1.5em;
     font-weight: bold;

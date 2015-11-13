@@ -32,8 +32,17 @@ var LiveBin = function(initChannel) {
         var wasAtEnd = $messages.scrollTop() + $messages.outerHeight() >= $messages[0].scrollHeight - 50;
         
         // Construct message
+        var zeroPadding = function(number) {
+           // Pad minutes and seconds that come without a leading zero
+           return (number < 10) ? "0" + number : number; 
+        };
+        var currentDate = new Date();
+        var currentMinute = zeroPadding(currentDate.getMinutes());
+        var currentSecond = zeroPadding(currentDate.getSeconds());
+        var time = currentDate.getHours() + ":" + currentMinute + ":" + currentSecond;
         var message = $("<div>")
             .addClass("message")
+            .append($("<span>").addClass("content-time").text(time))
             .append(
                 $("<span>")
                     .addClass("username")
